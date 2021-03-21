@@ -21,6 +21,9 @@
     >
       <slot :name="handle"></slot>
     </div>
+    <slot name="activator" :class="[{
+      [activatorClassNameActive]: enabled
+    }, activatorClassName]"></slot>
     <slot></slot>
   </div>
 </template>
@@ -229,6 +232,14 @@ export default {
     onResize: {
       type: Function,
       default: () => true
+    },
+    activatorClassName: {
+      type: String,
+      default: 'vdr-activator'
+    },
+    activatorClassNameActive: {
+      type: String,
+      default: 'activator-active'
     }
   },
 
@@ -382,14 +393,14 @@ export default {
           return
         }
 
-        if (!this.enabled) {
+        if (this.targetedActivator(target) && !this.enabled) {
           this.enabled = true
 
           this.$emit('activated')
           this.$emit('update:active', true)
         }
 
-        if (this.draggable) {
+        if (((this.hasActivator && this.enabled) || !this.hasActivator) && this.draggable) {
           this.dragEnable = true
         }
 
@@ -781,6 +792,10 @@ export default {
       }
 
       removeEvent(document.documentElement, eventsFor.move, this.handleResize)
+    },
+    targetedActivator (target) {
+      if (!this.$slots.activator) return true
+      return this.$slots.activator[0].elm.contains(target)
     }
   },
   computed: {
@@ -824,6 +839,9 @@ export default {
     },
     isCornerHandle () {
       return (Boolean(this.handle) && ['tl', 'tr', 'br', 'bl'].includes(this.handle))
+    },
+    hasActivator () {
+      return this.$slots.activator !== undefined
     }
   },
 
